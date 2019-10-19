@@ -136,8 +136,9 @@ CC         = $(GCCROOT)avr-gcc
 
 # Override is only needed by avr-lib build system.
 
-override CFLAGS        = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) $(DEFS)
+override CFLAGS        = -g -Wall $(OPTIMIZE) -mmcu=$(MCU_TARGET) -DF_CPU=$(AVR_FREQ) -I/usr/lib/avr/include $(DEFS)
 override LDFLAGS       = $(LDSECTIONS) -Wl,--relax -nostartfiles -nostdlib
+# override LDFLAGS       = $(LDSECTIONS) -Wl,--relax -nostartfiles
 #-Wl,--gc-sections
 
 OBJCOPY        = $(GCCROOT)avr-objcopy
@@ -298,6 +299,7 @@ atmega328: MCU_TARGET = atmega328p
 atmega328: CFLAGS += $(COMMON_OPTIONS)
 atmega328: AVR_FREQ ?= 16000000L
 atmega328: LDSECTIONS  = -Wl,--section-start=.text=0x7e00 -Wl,--section-start=.version=0x7ffe
+atmega328: LIBS += -latmega328p
 atmega328: $(PROGRAM)_atmega328.hex
 atmega328: $(PROGRAM)_atmega328.lst
 
@@ -528,7 +530,7 @@ isp-stk500: $(PROGRAM)_$(TARGET).hex
 	$(STK500-2)
 
 %.elf: $(OBJ) baudcheck $(dummy)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -L/usr/lib/avr/lib -o $@ $< $(LIBS)
 	$(SIZE) $@
 
 clean:

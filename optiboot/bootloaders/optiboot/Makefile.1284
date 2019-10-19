@@ -16,6 +16,26 @@ atmega644p: CFLAGS += $(UART_CMD)
 atmega644p: $(PROGRAM)_atmega644p.hex
 atmega644p: $(PROGRAM)_atmega644p.lst
 
+atmega324pa: TARGET = atmega324pa
+atmega324pa: MCU_TARGET = atmega324pa
+atmega324pa: CFLAGS += $(COMMON_OPTIONS) -DBIGBOOT
+atmega324pa: AVR_FREQ ?= 16000000L
+atmega324pa: LDSECTIONS  = -Wl,--section-start=.text=0x7c00 -Wl,--section-start=.version=0x7ffe
+atmega324pa: CFLAGS += $(UART_CMD)
+atmega324pa: $(PROGRAM)_atmega324pa.hex
+atmega324pa: $(PROGRAM)_atmega324pa.lst
+
+atmega324pb: TARGET = atmega324pb
+atmega324pb: MCU_TARGET = atmega324pb
+atmega324pb: CFLAGS += $(COMMON_OPTIONS) -DBIGBOOT -DLED=C7
+atmega324pb: AVR_FREQ ?= 16000000L
+atmega324pb: LDSECTIONS  = -Wl,--section-start=.text=0x7c00 -Wl,--section-start=.version=0x7ffe
+atmega324pb: CFLAGS += $(UART_CMD)
+atmega324pb: $(PROGRAM)_atmega324pb.hex
+atmega324pb: $(PROGRAM)_atmega324pb.lst
+atmega324pb: LIBS += -latmega324pb
+
+atmega1284: TARGET = atmega1284p
 atmega1284: TARGET = atmega1284p
 atmega1284: MCU_TARGET = atmega1284p
 atmega1284: CFLAGS += $(COMMON_OPTIONS) -DBIGBOOT

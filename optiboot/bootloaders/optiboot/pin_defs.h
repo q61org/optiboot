@@ -18,7 +18,8 @@
 /* Onboard LED is connected to pin PB5 in Arduino NG, Diecimila, and Duemilanove
  */ 
 #if !defined(LED)
-#define LED B5
+#define LED B4
+// #define LED B5
 #endif
 
 /* Ports for soft UART */
@@ -106,7 +107,7 @@
 
 /*------------------------------------------------------------------------ */
 /* Sanguino support (and other 40pin DIP cpus) */
-#if defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega32__) || defined (__AVR_ATmega16__)
+#if defined(__AVR_ATmega324PA__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega32__) || defined (__AVR_ATmega16__)
 /*------------------------------------------------------------------------ */
 /* Onboard LED is connected to pin PB0 on Sanguino */ 
 #if !defined(LED)

@@ -274,7 +274,8 @@ optiboot_version = 256*(OPTIBOOT_MAJVER + OPTIBOOT_CUSTOMVER) + OPTIBOOT_MINVER;
 /* set the UART baud rate defaults */
 #ifndef BAUD_RATE
 #if F_CPU >= 8000000L
-#define BAUD_RATE   115200L // Highest rate Avrdude win32 will support
+#define BAUD_RATE   57600L 
+//#define BAUD_RATE   115200L // Highest rate Avrdude win32 will support
 #elif F_CPU >= 1000000L
 #define BAUD_RATE   9600L   // 19200 also supported, but with significant error
 #elif F_CPU >= 128000L
@@ -330,6 +331,7 @@ optiboot_version = 256*(OPTIBOOT_MAJVER + OPTIBOOT_CUSTOMVER) + OPTIBOOT_MINVER;
 #define WATCHDOG_8S     (_BV(WDP3) | _BV(WDP0) | _BV(WDE))
 #endif
 
+#define WATCHDOG_IS_8S	((WDTCSR & (_BV(WDP3) | _BV(WDP2) | _BV(WDP1) | _BV(WDP0))) == (_BV(WDP3) | _BV(WDP0)))
 
 /*
  * We can never load flash with more than 1 page at a time, so we can save
@@ -483,8 +485,22 @@ int main(void) {
   ch = MCUCSR;
   MCUCSR = 0;
 #endif
-  if (ch & (_BV(WDRF) | _BV(BORF) | _BV(PORF)))
+
+/*  uint8_t softreboot = (GPIOR2 == 0x80);
+  GPIOR2 = 0;
+  if (!softreboot) {
+	  if ((ch & (_BV(WDRF) | _BV(BORF) | _BV(PORF))))
+		appStart(ch);
+  }*/
+
+  uint8_t softreboot = (eeprom_read_byte((uint8_t*)1) == 0x80);
+  
+  if (!softreboot) {
+	if ((ch & (_BV(WDRF) | _BV(BORF) | _BV(PORF))))
       appStart(ch);
+  } else {
+	eeprom_write_byte((uint8_t*)1, 0x00);
+  }
 
 #if LED_START_FLASHES > 0
   // Set up Timer 1 for timeout counter
@@ -498,6 +514,23 @@ int main(void) {
   UCSRC = _BV(URSEL) | _BV(UCSZ1) | _BV(UCSZ0);  // config USART; 8N1
   UBRRL = (uint8_t)( (F_CPU + BAUD_RATE * 4L) / (BAUD_RATE * 8L) - 1 );
 #else
+
+#ifndef U2X0 
+#define U2X0 U2X
+#endif
+#ifndef RXEN0
+#define RXEN0 RXEN
+#endif
+#ifndef TXEN0
+#define TXEN0 TXEN
+#endif
+#ifndef UCSZ00
+#define UCSZ00 UCSZ0
+#endif
+#ifndef UCSZ01
+#define UCSZ01 UCSZ1
+#endif
+
   UART_SRA = _BV(U2X0); //Double speed mode USART0
   UART_SRB = _BV(RXEN0) | _BV(TXEN0);
   UART_SRC = _BV(UCSZ00) | _BV(UCSZ01);
@@ -506,7 +539,7 @@ int main(void) {
 #endif
 
   // Set up watchdog to trigger after 1s
-  watchdogConfig(WATCHDOG_1S);
+  watchdogConfig((softreboot) ? WATCHDOG_8S : WATCHDOG_2S);
 
 #if (LED_START_FLASHES > 0) || defined(LED_DATA_FLASH)
   /* Set LED pin as output */
@@ -686,6 +719,9 @@ int main(void) {
 
 void putch(char ch) {
 #ifndef SOFT_UART
+#ifndef UDRE0
+#define UDRE0 UDRE
+#endif
   while (!(UART_SRA & _BV(UDRE0)));
   UART_UDR = ch;
 #else
@@ -751,6 +787,13 @@ uint8_t getch(void) {
       "r25"
 );
 #else
+#ifndef RXC0
+#define RXC0 RXC
+#endif
+#ifndef FE0
+#define FE0 FE
+#endif
+
   while(!(UART_SRA & _BV(RXC0)))
     ;
   if (!(UART_SRA & _BV(FE0))) {
